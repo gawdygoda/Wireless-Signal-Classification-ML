@@ -5,7 +5,8 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
 from sklearn.metrics import accuracy_score, confusion_matrix, roc_auc_score
 import pandas as pd
-# import seaborn as sns
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 
 
@@ -14,9 +15,7 @@ data_file = "./data/RML2016.10a_dict.pkl"
 
 features_df = extract_features(data_file)
 print (features_df.shape )
-
 count = (features_df['signal_type'] == 'BPSK').sum()
-
 print(count)
 
 
@@ -52,8 +51,8 @@ y_pred = svm_model.predict(X_test)
 accuracy = accuracy_score(y_test, y_pred)
 print(f"Accuracy: {accuracy:.2f}")
 
-auc_roc = roc_auc_score(y_test, y_pred)
-print("AUC-ROC:", auc_roc)
+#auc_roc = roc_auc_score(y_test, y_pred)
+#print("AUC-ROC:", auc_roc)
 
 # Confusion matrix
 confusionMatrix = confusion_matrix(y_test, y_pred)
@@ -66,6 +65,6 @@ sns.heatmap(confusionMatrix, annot=True, annot_kws={"fontsize": 12}, fmt="d", cm
 plt.title("Signal Type Confusion Matrix", fontsize=14)
 plt.xlabel("Predicted", fontsize=14)
 plt.ylabel("Actual", fontsize=14)
-plt.xticks(ticks=[0.5, 1.5], labels=["BPSK","QPSK","QAM16","WBFM","GFSK"], fontsize=10)
-plt.yticks(ticks=[0.5, 1.5], labels=["BPSK","QPSK","QAM16","WBFM","GFSK"], fontsize=10)
+plt.xticks(ticks=[0.5, 1.5, 2.5, 3.5, 4.5], labels=["BPSK","QPSK","QAM16","WBFM","GFSK"], fontsize=10)
+plt.yticks(ticks=[0.5, 1.5, 2.5, 3.5, 4.5], labels=["BPSK","QPSK","QAM16","WBFM","GFSK"], fontsize=10)
 plt.show()
