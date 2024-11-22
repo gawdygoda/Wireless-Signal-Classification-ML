@@ -25,9 +25,9 @@ def extract_features(file_name):
         signal_type = key[0]
         # print(signal_type)
         array_of_signal_types.append(signal_type)
-        if signal_type in ["BPSK","QPSK","QAM16","WBFM","GFSK"]:
+        if signal_type in ['AM-SSB', 'WBFM', 'BPSK', 'CPFSK', 'GFSK', 'AM-DSB', 'QAM16', 'QAM64', 'QPSK', '8PSK', 'PAM4']:
             snr = key[1]
-            if int(snr) >= 0:
+            if int(snr) <= -100:
                 samples = data[key]
                 for i in range(len(samples)):
                     i_samples = samples[i][0]
