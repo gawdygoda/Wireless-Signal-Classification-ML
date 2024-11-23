@@ -27,7 +27,7 @@ from joblib import parallel_backend
 
 DIRECTORY = "./data"
 FILE_NAME = "RML2016.10a_dict.pkl"
-MODEL_TYPE = "RND_FOREST" #SVC_LINEAR, SVC_POLY, SVC_RBF, RND_FOREST
+MODEL_TYPE = "SVC_RBF" #SVC_LINEAR, SVC_POLY, SVC_RBF, RND_FOREST
 SAVE_PLOTS_FLAG = 1
 feature_dict = {} # Global dictionary to store feature names and values
 
@@ -142,6 +142,7 @@ with parallel_backend('threading', n_jobs=-2):
             clf = SVC(kernel='linear', random_state=42)
         case "SVC_POLY":
             print("Using SVC with polynomial kernel")
+            clf = SVC(kernel='poly', degree=2, gamma='auto', coef0=1, C=5)
         case "SVC_RBF":
             print("Using SVC with radial basis function kernel")
             clf = SVC(kernel='rbf', gamma=0.001, C=100000.0)
@@ -151,14 +152,14 @@ with parallel_backend('threading', n_jobs=-2):
 
     clf.fit(X_train, y_train)
 
+    #Calcualte elapsed time for training only
+    elapsed_time = time.time() - start_time
+    print(f"Elapsed time to compute the model: {elapsed_time:.3f} seconds")
+
     # Save the trained model to a file with the dynamic name
     model_file_name = f"model_{MODEL_TYPE}.pkl"
     model_path = os.path.join(DIRECTORY, model_file_name)
     joblib.dump(clf, model_path)
-
-    #Calcualte elapsed time for training only
-    elapsed_time = time.time() - start_time
-    print(f"Elapsed time to compute the model: {elapsed_time:.3f} seconds")
 
     # Evaluate accuracy for each SNR level
     unique_snrs = sorted(set(X_test[:, -1]))  # Get unique SNR levels from test set
@@ -223,6 +224,12 @@ with parallel_backend('threading', n_jobs=-2):
 
     # Print Classification Report
     print("Classification Report for Modulation Types:")
+    print("Train Result:n================================================")
+    # Confusion matrix for overall test set
+    y_pred_train = clf.predict(X_train)
+    print(classification_report(y_train, y_pred_train, target_names=label_encoder.classes_))
+
+    print("Test Result:n================================================")
     print(classification_report(y_test, y_pred_test, target_names=label_encoder.classes_))
 
     # # Filter test samples with SNR > 5 dB
