@@ -20,21 +20,11 @@ from joblib import parallel_backend
 
 DIRECTORY = "./data"
 FILE_NAME = "RML2016.10a_dict.pkl"
-MODEL_TYPE = "SVC_POLY_C" #SVC_LINEAR_C, SVC_POLY_C, SVC_RBF_C
+MODEL_TYPE = "GRID_SEARCH_C" #SVC_LINEAR_C, SVC_POLY_C, SVC_RBF_C
 SAVE_PLOTS_FLAG = 1
 
 # n_jobs=-2 means run on all CPUs - 1 (leave one for me to surf the web!)
 with parallel_backend('threading', n_jobs=-2):
-
-    #Class for colorizing RBF plots
-    class MidpointNormalize(Normalize):
-        def __init__(self, vmin=None, vmax=None, midpoint=None, clip=False):
-            self.midpoint = midpoint
-            Normalize.__init__(self, vmin, vmax, clip)
-
-        def __call__(self, value, clip=None):
-            x, y = [self.vmin, self.midpoint, self.vmax], [0, 0.5, 1]
-            return np.ma.masked_array(np.interp(value, x, y))
 
     #Set a runtime timer for the training only
     start_time = time.time()
@@ -74,29 +64,38 @@ with parallel_backend('threading', n_jobs=-2):
     #Split the dataset for train and test
     X_train, X_test, y_train, y_test = train_test_split(X, encoded_labels, test_size=0.3, random_state=42)
 
-    # ###########################   SVC RBF Parameter Grid Search + Model - START
-    #
-    # # This code will do
-    # # num C_range x num gama_range x n_splits iterations
-    # # 5*5*1 iterations = 25 iterations
-    # # from testing, each iteration takes ?? min to train on M1 Mac Pro (Iterations take longer as the numbers get bigger)
-    # C_range = np.logspace(-2, 5, 5)
-    # gamma_range = np.logspace(-9, 3, 5)
-    # param_grid = dict(gamma=gamma_range, C=C_range)
-    #
-    # print (param_grid)
-    #
-    # cv = StratifiedShuffleSplit(n_splits=1, test_size=0.2, random_state=42)
-    #
-    # grid = GridSearchCV(SVC(), param_grid=param_grid, cv=cv)#, n_jobs=-2)
-    # grid.fit(X_train, y_train)
-    #
-    # print(
-    #     "The best parameters are %s with a score of %0.2f"
-    #     % (grid.best_params_, grid.best_score_)
-    # )
-    #
-    # ###########################   SVC RBF Parameter Grid Search - END
+    ###########################   SVC RBF Parameter Grid Search + Model - START
+
+    # This code will do
+    # num C_range x num gama_range x n_splits iterations
+    # 4*4*1 iterations = 25 iterations
+    # from testing, each iteration takes ?? min to train on M1 Mac Pro (Iterations take longer as the numbers get bigger)
+    C_range = np.logspace(3, 9, 4)
+    gamma_range = np.logspace(-6, 0, 4)
+    param_grid = dict(gamma=gamma_range, C=C_range)
+
+    print (param_grid)
+
+    cv = StratifiedShuffleSplit(n_splits=1, test_size=0.2, random_state=42)
+
+    grid = GridSearchCV(SVC(), param_grid=param_grid, cv=cv)#, n_jobs=-2)
+    grid.fit(X_train, y_train)
+
+    # Save the trained model to a file with the dynamic name
+    model_file_name = f"model_{MODEL_TYPE}.pkl"
+    model_path = os.path.join(DIRECTORY, model_file_name)
+    joblib.dump(grid, model_path)
+
+    print(
+        "The best parameters are %s with a score of %0.2f"
+        % (grid.best_params_, grid.best_score_)
+    )
+
+    #Calcualte elapsed time for searching only
+    elapsed_time = time.time() - start_time
+    print(f"Elapsed time to compute the model: {elapsed_time:.3f} seconds")
+
+    ###########################   SVC RBF Parameter Grid Search - END
 
 
     ###########################   SVC Model - START

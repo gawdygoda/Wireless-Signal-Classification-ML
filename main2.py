@@ -5,6 +5,7 @@ import pandas as pd
 import pickle
 import numpy as np
 from sklearn.preprocessing import LabelEncoder
+from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.svm import SVC
@@ -27,7 +28,7 @@ from joblib import parallel_backend
 
 DIRECTORY = "./data"
 FILE_NAME = "RML2016.10a_dict.pkl"
-MODEL_TYPE = "SVC_RBF" #SVC_LINEAR, SVC_POLY, SVC_RBF, RND_FOREST
+MODEL_TYPE = "SVC_POLY" #SVC_LINEAR, SVC_POLY, SVC_RBF, RND_FOREST
 SAVE_PLOTS_FLAG = 1
 feature_dict = {} # Global dictionary to store feature names and values
 
@@ -109,8 +110,10 @@ with parallel_backend('threading', n_jobs=-2):
     with open(file_path, 'rb') as f:
         data = pickle.load(f, encoding='latin1')
 
-    # Feature extraction for all signals
+    # Feature extraction and scaling for all signals
     features, labels = extract_features(data)
+    scaler = StandardScaler()
+    features = scaler.fit_transform(features)
 
     # Encode labels for classification
     label_encoder = LabelEncoder()
