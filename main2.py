@@ -28,7 +28,7 @@ from joblib import parallel_backend
 
 DIRECTORY = "./data"
 FILE_NAME = "RML2016.10a_dict.pkl"
-MODEL_TYPE = "SVC_POLY" #SVC_LINEAR, SVC_POLY, SVC_RBF, RND_FOREST
+MODEL_TYPE = "SVC_LINEAR" #SVC_LINEAR, SVC_POLY, SVC_RBF, RND_FOREST
 SAVE_PLOTS_FLAG = 1
 feature_dict = {} # Global dictionary to store feature names and values
 
@@ -164,38 +164,6 @@ with parallel_backend('threading', n_jobs=-2):
     model_path = os.path.join(DIRECTORY, model_file_name)
     joblib.dump(clf, model_path)
 
-    # Evaluate accuracy for each SNR level
-    unique_snrs = sorted(set(X_test[:, -1]))  # Get unique SNR levels from test set
-    accuracy_per_snr = []
-
-    for snr in unique_snrs:
-        # Select samples with the current SNR
-        snr_indices = np.where(X_test[:, -1] == snr)
-        X_snr = X_test[snr_indices]
-        y_snr = y_test[snr_indices]
-
-        # Predict and calculate accuracy
-        y_pred = clf.predict(X_snr)
-        accuracy = accuracy_score(y_snr, y_pred)
-        accuracy_per_snr.append(accuracy * 100)  # Convert to percentage
-
-        print(f"SNR: {snr} dB, Accuracy: {accuracy * 100:.2f}%")
-
-    # Plot Recognition Accuracy vs. SNR
-    plt.figure(figsize=(10, 6))
-    plt.plot(unique_snrs, accuracy_per_snr, 'b-o', label='Recognition Accuracy')
-    plt.xlabel("SNR (dB)")
-    plt.ylabel("Recognition Accuracy (%)")
-    plt.title("Recognition Accuracy vs. SNR for Modulation Classification")
-    plt.legend()
-    plt.grid(True)
-    plt.ylim(0, 100)
-    if SAVE_PLOTS_FLAG:
-        model_file_name = f"{MODEL_TYPE}_Accuracy_vs_SNR.png"
-        save_path = os.path.join(DIRECTORY, model_file_name)
-        plt.savefig(save_path)
-    plt.show(block=False)
-
     # Feature importance for the classifier
     if MODEL_TYPE == "RND_FOREST":
         feature_names = list(feature_dict.keys())
@@ -225,6 +193,38 @@ with parallel_backend('threading', n_jobs=-2):
         plt.savefig(save_path)
     plt.show(block=False)
 
+    # Evaluate accuracy for each SNR level
+    unique_snrs = sorted(set(X_test[:, -1]))  # Get unique SNR levels from test set
+    accuracy_per_snr = []
+
+    for snr in unique_snrs:
+        # Select samples with the current SNR
+        snr_indices = np.where(X_test[:, -1] == snr)
+        X_snr = X_test[snr_indices]
+        y_snr = y_test[snr_indices]
+
+        # Predict and calculate accuracy
+        y_pred = y_pred_test[snr_indices]
+        accuracy = accuracy_score(y_snr, y_pred)
+        accuracy_per_snr.append(accuracy * 100)  # Convert to percentage
+
+        print(f"SNR: {snr} dB, Accuracy: {accuracy * 100:.2f}%")
+
+    # Plot Recognition Accuracy vs. SNR
+    plt.figure(figsize=(10, 6))
+    plt.plot(unique_snrs, accuracy_per_snr, 'b-o', label='Recognition Accuracy')
+    plt.xlabel("SNR (dB)")
+    plt.ylabel("Recognition Accuracy (%)")
+    plt.title("Recognition Accuracy vs. SNR for Modulation Classification")
+    plt.legend()
+    plt.grid(True)
+    plt.ylim(0, 100)
+    if SAVE_PLOTS_FLAG:
+        model_file_name = f"{MODEL_TYPE}_Accuracy_vs_SNR.png"
+        save_path = os.path.join(DIRECTORY, model_file_name)
+        plt.savefig(save_path)
+    plt.show(block=False)
+
     # Print Classification Report
     print("Classification Report for Modulation Types:")
     print("Train Result:n================================================")
@@ -234,25 +234,3 @@ with parallel_backend('threading', n_jobs=-2):
 
     print("Test Result:n================================================")
     print(classification_report(y_test, y_pred_test, target_names=label_encoder.classes_))
-
-    # # Filter test samples with SNR > 5 dB
-    # snr_above_5_indices = np.where(X_test[:, -1] > 5)  # Select indices where SNR > 5
-    # X_test_snr_above_5 = X_test[snr_above_5_indices]
-    # y_test_snr_above_5 = y_test[snr_above_5_indices]
-    #
-    # # Predict on this subset of data
-    # y_pred_snr_above_5 = clf.predict(X_test_snr_above_5)
-    #
-    # # Plot confusion matrix for SNR > 5 dB
-    # conf_matrix_snr_above_5 = confusion_matrix(y_test_snr_above_5, y_pred_snr_above_5)
-    # plt.figure(figsize=(12, 10))
-    # sns.heatmap(conf_matrix_snr_above_5, annot=True, fmt="d", cmap="Blues",
-    #             xticklabels=label_encoder.classes_, yticklabels=label_encoder.classes_)
-    # plt.xlabel("Predicted Label")
-    # plt.ylabel("True Label")
-    # plt.title("Confusion Matrix for Modulation Classification (SNR > 5 dB)")
-    # plt.show()
-    #
-    # # Print Classification Report for SNR > 5 dB
-    # print("Classification Report for Modulation Types (SNR > 5 dB):")
-    # print(classification_report(y_test_snr_above_5, y_pred_snr_above_5, target_names=label_encoder.classes_))
